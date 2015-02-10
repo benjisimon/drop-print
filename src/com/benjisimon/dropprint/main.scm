@@ -13,7 +13,10 @@
 (define-alias Set java.util.Set)
 (define-alias OutputStream java.io.OutputStream)
 (define-alias PrintStream java.io.PrintStream)
+(define-alias FileInputStream java.io.FileInputStream)
 (define-alias Iterator java.util.Iterator)
+(define-alias Date java.util.Date)
+(define-alias File java.io.File)
 
 (define (logi message)
   (Log:i "main.scm" message))
@@ -42,7 +45,7 @@
   (on-create-view
    (<kawa.standard.Scheme>:registerEnvironment)
    (let ((log-area (android.widget.TextView (this)))
-         (*buffer* :: String "Hello From DropPrint"))
+         (*buffer* :: String "DropPrint started"))
      (define (feedback . words)
        (let ((buffer :: string ""))
          (for-each (lambda (w)
@@ -66,6 +69,28 @@
                       (feedback "Skipping: " (item:getName))
                       (loop iter))))
              #!null))))
+
+
+     (define (scan-directory (buffer :: PrintStream))
+       (let ((root :: File (File "/mnt/sdcard/DropPrint")))
+         (if (not (root:isDirectory))
+           (root:mkdir))
+         (let loop ((files :: File[] (root:listFiles)) (i 0))
+           (cond ((< i files:length)
+                  (feedback "Printing: " (files i))
+                  (let next-byte ((fio :: FileInputStream (FileInputStream (files i))))
+                    (let ((byte (fio:read)))
+                      (cond ((= -1 byte)
+                             (buffer:print "\n\n")
+                             (feedback "Done. Deleting " (files i))
+                             ((files i):delete))
+                            (else
+                             (buffer:write byte)
+                             (next-byte fio)))))
+                  (loop files (+ i 1)))
+                 (else
+                  #f)))))
+
      
      (feedback "Setting up printer handlers")
      (logi "Getting ready")
@@ -90,9 +115,11 @@
                                                                (set! buffer (PrintStream out)))
                                                              (feedback "Connected!"))
                                                             ((and connected? (not tested?))
-                                                             (feedback "Sending test string")
-                                                             (buffer:print "Hello World\n")
-                                                             (set! tested? #t)))
+                                                             (feedback "Print welcome message")
+                                                             (buffer:print (string-append "DropPrint is Ready\n"))
+                                                             (set! tested? #t))
+                                                            ((and connected? tested?)
+                                                             (scan-directory buffer)))
                                                       (loop)))))))
        (monitor:start)
        (let ((device :: BluetoothDevice (find-device))
