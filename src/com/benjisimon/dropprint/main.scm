@@ -2,21 +2,10 @@
 ;; Our top level main app
 ;;
 (require 'android-defs)
+(require <com.benjisimon.dropprint.imports>)
+(require <com.benjisimon.dropprint.device>)
+(require <com.benjisimon.dropprint.files>)
 
-(define-alias Log android.util.Log)
-(define-alias Handler android.os.Handler)
-(define-alias Message android.os.Message)
-(define-alias Thread java.lang.Thread)
-(define-alias BluetoothAdapter android.bluetooth.BluetoothAdapter)
-(define-alias BluetoothDevice android.bluetooth.BluetoothDevice)
-(define-alias BluetoothSocket android.bluetooth.BluetoothSocket)
-(define-alias Set java.util.Set)
-(define-alias OutputStream java.io.OutputStream)
-(define-alias PrintStream java.io.PrintStream)
-(define-alias FileInputStream java.io.FileInputStream)
-(define-alias Iterator java.util.Iterator)
-(define-alias Date java.util.Date)
-(define-alias File java.io.File)
 
 (define (logi message)
   (Log:i "main.scm" message))
@@ -26,20 +15,6 @@
           ((handleMessage (message :: Message))
            (callback message)
            #!void)))
-
-(define (status-string code)
-  (case code
-    ((0) "None")
-    ((1) "Listening")
-    ((2) "Connecting")
-    ((3) "Connected")
-    ((4) "Lost Connection")
-    ((5) "Failed Connection")
-    ((6) "Successful Connection")
-    ((7) "Scanning")
-    ((8) "Scanning Stopped")
-    (else (string-append "Unknown code: " (code:to-string)))))
-
 
 (activity main
   (on-create-view
@@ -54,53 +29,12 @@
          (set! *buffer* (string-append buffer "\n" *buffer*))
          (log-area:post (runnable (lambda ()
                                     (log-area:set-text *buffer*))))))
-     (define (find-device)
-       (feedback "Searching for printer")
-       (let* ((adapter :: BluetoothAdapter (<android.bluetooth.BluetoothAdapter>:get-default-adapter))
-              (devices :: Set (adapter:get-bonded-devices)))
-         (feedback "Found " (devices:size) " possible devices")
-         (let loop ((iter :: Iterator (devices:iterator)))
-           (if (iter:has-next)
-             (let ((item :: BluetoothDevice (iter:next)))
-               (cond ((equal? (item:getName) "DL58")
-                      (feedback "Found it: " (item:getName))
-                      item)
-                     (else
-                      (feedback "Skipping: " (item:getName))
-                      (loop iter))))
-             #!null))))
 
 
-     (define (scan-directory (buffer :: PrintStream))
-       (let ((root :: File (File "/mnt/sdcard/DropPrint")))
-         (if (not (root:isDirectory))
-           (root:mkdir))
-         (let loop ((files :: File[] (root:listFiles)) (i 0))
-           (cond ((< i files:length)
-                  (feedback "Printing: " (files i))
-                  (let next-byte ((fio :: FileInputStream (FileInputStream (files i))))
-                    (let ((byte (fio:read)))
-                      (cond ((= -1 byte)
-                             (buffer:print "\n\n")
-                             (feedback "Done. Deleting " (files i))
-                             ((files i):delete))
-                            (else
-                             (buffer:write byte)
-                             (next-byte fio)))))
-                  (loop files (+ i 1)))
-                 (else
-                  #f)))))
 
      
      (feedback "Setting up printer handlers")
-     (logi "Getting ready")
-     (let* ((message-handler (handler
-                              (lambda (msg)
-                                (feedback "Got message message"))))
-            (device-handler (handler
-                             (lambda (msg)
-                               (feedback "Got device message"))))
-            (printer :: BluetoothSocket #!null)
+     (let* ((printer :: BluetoothSocket #!null)
             (buffer :: PrintStream #!null)
             (connected? #f)
             (tested? #f)
@@ -119,10 +53,10 @@
                                                              (buffer:print (string-append "DropPrint is Ready\n"))
                                                              (set! tested? #t))
                                                             ((and connected? tested?)
-                                                             (scan-directory buffer)))
+                                                             (scan-directory feedback buffer)))
                                                       (loop)))))))
        (monitor:start)
-       (let ((device :: BluetoothDevice (find-device))
+       (let ((device :: BluetoothDevice (find-device feedback))
              (uuid :: java.util.UUID   (<java.util.UUID>:fromString "00001101-0000-1000-8000-00805F9B34FB")))
          (cond ((not (eq? device #!null))
                 (feedback "Device address: " device)
