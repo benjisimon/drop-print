@@ -1,6 +1,7 @@
 ;;
 ;; Import our standard java aliases
 ;;
+(require <com.benjisimon.dropprint.util>)
 
 (define-alias Log android.util.Log)
 (define-alias Handler android.os.Handler)
@@ -16,4 +17,7 @@
 (define-alias Iterator java.util.Iterator)
 (define-alias Date java.util.Date)
 (define-alias File java.io.File)
+(define-alias Bitmap android.graphics.Bitmap)
+(define-alias BitmapFactory android.graphics.BitmapFactory)
+
 

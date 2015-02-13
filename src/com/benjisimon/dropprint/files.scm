@@ -2,11 +2,15 @@
 ;; Work with our files
 ;;
 (require <com.benjisimon.dropprint.imports>)
+(require <com.benjisimon.dropprint.images>)
 
 (define (file-handler (file :: File))
-  (let ((name :: String (file:get-name)))
+  (let ((name :: String ((file:get-name):to-lower-case)))
     (cond ((name:matches "^.*[.]txt$") text-handler)
           ((name:matches "^.*[.]scm$") scm-handler)
+          ((name:matches "^.*[.]jpg$") image-handler)
+          ((name:matches "^.*[.]png$") image-handler)
+          ((name:matches "^.*[.]gif$") image-handler)
           (else unknown-handler))))
 
 (define (text-handler feedback (file :: File) (buffer :: PrintStream) )
@@ -33,6 +37,10 @@
        (buffer:print "\n\n"))
      (ex java.lang.Throwable
          (feedback "Error: " ex)))))
+
+(define (image-handler feedback (file :: File) (buffer :: PrintStream) )
+  (let ((bitmap :: Bitmap (BitmapFactory:decodeFile (file:get-absolute-path))))
+    (image-write feedback bitmap buffer)))
 
 (define (unknown-handler feedback (file :: File) (buffer :: PrintStream))
   (feedback "Ignoring unknown file type: " (file:get-name)))
