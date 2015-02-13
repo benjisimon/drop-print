@@ -19,5 +19,5 @@
 (define-alias File java.io.File)
 (define-alias Bitmap android.graphics.Bitmap)
 (define-alias BitmapFactory android.graphics.BitmapFactory)
-
+(define-alias Matrix android.graphics.Matrix)
 
