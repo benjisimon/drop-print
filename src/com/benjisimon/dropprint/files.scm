@@ -56,6 +56,7 @@
                (feedback "Discovered: " (files i))
                (let ((handler (file-handler (files i))))
                  (handler feedback (files i) buffer)
+                 (buffer:print "\n\n\n")
                  ((files i):delete))
                (loop (+ i 1)))
               (else
