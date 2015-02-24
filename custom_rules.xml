@@ -10,6 +10,7 @@
       <java failonerror="true" fork="true" classname="kawa.repl">
          <classpath>
             <pathelement path="libs/kawa.jar" />
+            <pathelement path="libs/zxing.jar" />
             <pathelement path="${sdk.dir}/platforms/${target}/android.jar" />
             <pathelement path="${out.classes.absolute.dir}" />
          </classpath>
@@ -23,6 +24,7 @@
          <arg file="src/${project.app.package.path}/files.scm" />
          <arg file="src/${project.app.package.path}/images.scm" />
          <arg file="src/${project.app.package.path}/device.scm" />
+         <arg file="src/${project.app.package.path}/qrcode.scm" />
       </java>
    </target>
 </project>

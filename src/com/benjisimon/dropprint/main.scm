@@ -50,7 +50,7 @@
                                                              (feedback "Connected!"))
                                                             ((and connected? (not tested?))
                                                              (feedback "Print welcome message")
-                                                             (buffer:print (string-append "DropPrint is Ready\n"))
+                                                             (buffer:print (string-append "DropPrint is Ready\n\n"))
                                                              (set! tested? #t))
                                                             ((and connected? tested?)
                                                              (scan-directory feedback buffer)))

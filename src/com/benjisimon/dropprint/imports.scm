@@ -23,4 +23,9 @@
 (define-alias Color android.graphics.Color)
 (define-alias BitmapFactory android.graphics.BitmapFactory)
 (define-alias Matrix android.graphics.Matrix)
+(define-alias BarcodeFormat com.google.zxing.BarcodeFormat)
+(define-alias EncodeHintType com.google.zxing.EncodeHintType)
+(define-alias MultiFormatWriter com.google.zxing.MultiFormatWriter)
+(define-alias WriterException com.google.zxing.WriterException)
+(define-alias BitMatrix com.google.zxing.common.BitMatrix)
 

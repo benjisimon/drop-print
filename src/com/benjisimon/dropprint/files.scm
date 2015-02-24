@@ -3,6 +3,8 @@
 ;;
 (require <com.benjisimon.dropprint.imports>)
 (require <com.benjisimon.dropprint.images>)
+(require <com.benjisimon.dropprint.qrcode>)
+(require <com.benjisimon.dropprint.util>)
 
 (define (file-handler (file :: File))
   (let ((name :: String ((file:get-name):to-lower-case)))
@@ -11,6 +13,8 @@
           ((name:matches "^.*[.]jpg$") image-handler)
           ((name:matches "^.*[.]png$") image-handler)
           ((name:matches "^.*[.]gif$") image-handler)
+          ((name:matches "^.*[.]qrc$") qrcode-handler)
+          ((name:matches "^.*[.]qrcode$") qrcode-handler)
           (else unknown-handler))))
 
 (define (text-handler feedback (file :: File) (buffer :: PrintStream) )
@@ -38,6 +42,10 @@
      (ex java.lang.Throwable
          (feedback "Error: " ex)))))
 
+(define (qrcode-handler feedback (file :: File) (buffer :: PrintStream))
+  (let ((contents (file->string file)))
+    (qrcode-write feedback contents buffer)))
+
 (define (image-handler feedback (file :: File) (buffer :: PrintStream) )
   (let ((bitmap :: Bitmap (BitmapFactory:decodeFile (file:get-absolute-path))))
     (image-write feedback bitmap buffer)))
@@ -56,7 +64,7 @@
                (feedback "Discovered: " (files i))
                (let ((handler (file-handler (files i))))
                  (handler feedback (files i) buffer)
-                 (buffer:print "\n\n\n")
+                 (buffer:print "\n-------\n")
                  ((files i):delete))
                (loop (+ i 1)))
               (else

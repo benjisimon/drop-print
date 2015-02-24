@@ -2,6 +2,10 @@
 ;; Useful for storing random'ish utilities
 ;;
 
+(define (show . words)
+  (for-each display words)
+  (newline))
+
 (define (inc x)
   (+ 1 x))
 
@@ -13,3 +17,23 @@
 
 (define (int-val x)
   (inexact->exact (truncate x)))
+
+(define (file->string f)
+  (let ((text (open-output-string))
+        (in (open-input-file f)))
+    (let loop ((line (read-line in 'concat)))
+      (cond ((eof-object? line) (get-output-string text))
+            (else
+             (write line text)
+             (loop (read-line in 'concat)))))))
+          
+(define (for-each-coord width height thunk)
+  (let loop ((x 0) (y 0))
+    (cond ((= y height) 'done)
+          (else
+           (thunk x y)
+           (if (= (inc x) width)
+             (loop 0 (inc y))
+             (loop (inc x) y))))))
+
+                        
