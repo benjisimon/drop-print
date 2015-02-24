@@ -12,16 +12,27 @@
                      message))))
 
 
-(define (scale-bitmap feedback (src :: Bitmap) w h) :: Bitmap
-  (let* ((cw (src:get-width))
-         (ch (src:get-height))
-         (nw w)
-         (nh h)
-         (sw (float-val (/ nw cw)))
-         (sh (float-val (/ nh ch)))
+(define (scale-bitmap feedback (src :: Bitmap) max-width) :: Bitmap
+  (let* ((src-w (src:get-width))
+         (src-h (src:get-height))
          (matrix :: Matrix (Matrix)))
-    (feedback "Skipping scale")
-    src))
+    (feedback "Scaling: " src-w "x" src-h " to fit in max-width=" max-width)
+    (let ((action (cond ((< src-w max-width)
+                         'skip)
+                        ((< src-h max-width)
+                         (matrix:postRotate 90)
+                         '(rotate 90))
+                        ((> src-w src-h)
+                         (matrix:postRotate 90)
+                         (matrix:postScale (/ max-width src-h)
+                                           (/ max-width src-h))
+                         `(rotate 90 scale ,(/ max-width src-h)))
+                        (else
+                         (matrix:postScale (/ max-width src-w)
+                                           (/ max-width src-w))
+                         `(scale ,(/ max-width src-w))))))
+      (feedback "scale action: " action)
+      (Bitmap:createBitmap src 0 0 src-w src-h matrix #t))))
 
 (define (make-image-buffer feedback (stream :: PrintStream))
   (let ((bit-index :: int 0)
@@ -49,7 +60,7 @@
             
 
 (define (image-write feedback (full :: Bitmap) (stream :: PrintStream))
-  (let* ((scaled (scale-bitmap feedback full 384 384))
+  (let* ((scaled (scale-bitmap feedback full 384))
          (stream-buffer (make-image-buffer feedback stream)))
     (let* ((img-w (scaled:get-width))
            (h (scaled:get-height))
@@ -80,6 +91,9 @@
       (stream-buffer 'flush)
       (snapshot-buffer 'flush))))
 
+;;
+;; From: http://www.had2know.com/technology/rgb-to-gray-scale-converter.html
+;;
 (define (rgb->bit pixel)
   (let* ((red (Color:red pixel))
          (green (Color:green pixel))
