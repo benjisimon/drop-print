@@ -63,8 +63,12 @@
         (cond ((< i files:length)
                (feedback "Discovered: " (files i))
                (let ((handler (file-handler (files i))))
-                 (handler feedback (files i) buffer)
-                 (buffer:print "\n-------\n")
+                 (try-catch 
+                  (begin
+                    (handler feedback (files i) buffer)
+                    (buffer:print "\n-------\n"))
+                  (ex java.lang.Throwable
+                      (feedback ex)))
                  ((files i):delete))
                (loop (+ i 1)))
               (else

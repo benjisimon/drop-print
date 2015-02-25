@@ -34,6 +34,32 @@
       (feedback "scale action: " action)
       (Bitmap:createBitmap src 0 0 src-w src-h matrix #t))))
 
+;;
+;; Via: http://en.wikipedia.org/wiki/Floyd%E2%80%93Steinberg_dithering
+;;
+(define (fs-dither-bitmap feedback (src :: Bitmap)) :: Bitmap
+  (let* ((src-w (src:get-width))
+         (src-h (src:get-height)))
+    (feedback "Dithering " src-w "x" src-h " image")
+    (define (store! x y pixel)
+      (src:set-pixel x y (gray->rgb pixel)))
+    (define (update! x y factor)
+      (if (and (< x src-w) (< y src-h) (>= x 0) (>= y 0))
+        (let ((gray (rgb->gray (src:get-pixel x y))))
+          (src:set-pixel x y (gray->rgb (gray+ gray factor))))))
+    (for-each-coord src-w src-h
+                    (lambda (x y)
+                      (let* ((old-pixel (rgb->gray (src:get-pixel x y)))
+                             (new-pixel (if (> old-pixel 128) 255 0))
+                             (quant-error (- old-pixel new-pixel)))
+                        (store! x y new-pixel)
+                        (update! (inc x) y       (* quant-error (/ 7 16)))
+                        (update! (dec x) (inc y) (* quant-error (/ 3 16)))
+                        (update! x       (inc y) (* quant-error (/ 5 16)))
+                        (update! (inc x) (inc y) (* quant-error (/ 1 16))))))
+    src))
+                        
+
 (define (make-image-buffer feedback (stream :: PrintStream))
   (let ((bit-index :: int 0)
         (accumulator :: int 0))
@@ -60,7 +86,7 @@
             
 
 (define (image-write feedback (full :: Bitmap) (stream :: PrintStream))
-  (let* ((scaled (scale-bitmap feedback full 384))
+  (let* ((scaled (fs-dither-bitmap feedback (scale-bitmap feedback full 384)))
          (stream-buffer (make-image-buffer feedback stream)))
     (let* ((img-w (scaled:get-width))
            (h (scaled:get-height))
@@ -94,10 +120,26 @@
 ;;
 ;; From: http://www.had2know.com/technology/rgb-to-gray-scale-converter.html
 ;;
-(define (rgb->bit pixel)
+(define (rgb->gray pixel)
   (let* ((red (Color:red pixel))
          (green (Color:green pixel))
-         (blue (Color:blue pixel))
-         (gray (+ (* 0.299 red) (* 0.587 green) (* 0.114 blue))))
-    (cond ((> gray 128) 0)
-          (else 1))))
+         (blue (Color:blue pixel)))
+    (if (= red green blue)
+      red
+      (+ (* 0.299 red) (* 0.587 green) (* 0.114 blue)))))
+
+(define (gray->rgb val)
+  (Color:rgb val val val))
+
+(define (rgb->bw-color pixel)
+  (if (> (rgb->gray pixel) 128) Color:WHITE Color:BLACK))
+
+(define (rgb->bit pixel)
+  (if (> (rgb->gray pixel) 128) 0 1))
+
+(define (gray+ gray-value factor)
+  (let ((new-value (+ gray-value factor)))
+    (cond ((< new-value 0) 0)
+          ((> new-value 255) 255)
+          (else
+           (round new-value)))))

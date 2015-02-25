@@ -11,6 +11,7 @@
 (define-alias BluetoothDevice android.bluetooth.BluetoothDevice)
 (define-alias BluetoothSocket android.bluetooth.BluetoothSocket)
 (define-alias Set java.util.Set)
+(define-alias Throwable java.lang.Throwable)
 (define-alias OutputStream java.io.OutputStream)
 (define-alias PrintStream java.io.PrintStream)
 (define-alias FileInputStream java.io.FileInputStream)

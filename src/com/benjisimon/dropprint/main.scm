@@ -5,6 +5,7 @@
 (require <com.benjisimon.dropprint.imports>)
 (require <com.benjisimon.dropprint.device>)
 (require <com.benjisimon.dropprint.files>)
+(require <com.benjisimon.dropprint.util>)
 
 
 (define (logi message)
@@ -19,12 +20,12 @@
 (activity main
   (on-create-view
    (<kawa.standard.Scheme>:registerEnvironment)
-   (let ((log-area (android.widget.TextView (this)))
+   (let ((log-area (android.widget.TextView (this) ))
          (*buffer* :: String "DropPrint started"))
      (define (feedback . words)
        (let ((buffer :: string ""))
          (for-each (lambda (w)
-                     (set! buffer (string-append buffer (w:to-string))))
+                     (set! buffer (string-append buffer (any->string w))))
                    words)
          (set! *buffer* (string-append buffer "\n" *buffer*))
          (log-area:post (runnable (lambda ()

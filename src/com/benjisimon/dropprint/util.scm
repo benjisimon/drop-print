@@ -36,4 +36,9 @@
              (loop 0 (inc y))
              (loop (inc x) y))))))
 
-                        
+(define (any->string x)
+  (if (instance? x java.lang.Throwable)
+    (let ((buffer (open-output-string)))
+      ((as java.lang.Throwable x):print-stack-trace  buffer)
+      (get-output-string buffer))
+    (x:to-string)))
