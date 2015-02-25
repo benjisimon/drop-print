@@ -17,6 +17,6 @@
                     (lambda (x y)
                       (set! (pixels (+ (* y w) x)) (if (result:get x y) Color:BLACK Color:WHITE))))
     (bitmap:set-pixels pixels 0 w 0 0 w h)
-    (image-write feedback bitmap buffer)))
+    (image-write feedback bitmap #f buffer)))
   
   

@@ -89,8 +89,10 @@
                       
             
 
-(define (image-write feedback (full :: Bitmap) (stream :: PrintStream))
-  (let* ((scaled (fs-dither-bitmap feedback (scale-bitmap feedback full 384)))
+(define (image-write feedback  (full :: Bitmap) dither? (stream :: PrintStream))
+  (let* ((scaled (if dither? 
+                   (fs-dither-bitmap feedback (scale-bitmap feedback full 384))
+                   (scale-bitmap feedback full 384)))
          (stream-buffer (make-image-buffer feedback stream)))
     (let* ((img-w (scaled:get-width))
            (h (scaled:get-height))

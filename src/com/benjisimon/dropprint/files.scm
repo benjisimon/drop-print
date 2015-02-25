@@ -48,7 +48,7 @@
 
 (define (image-handler feedback (file :: File) (buffer :: PrintStream) )
   (let ((bitmap :: Bitmap (BitmapFactory:decodeFile (file:get-absolute-path))))
-    (image-write feedback bitmap buffer)))
+    (image-write feedback bitmap #t buffer)))
 
 (define (unknown-handler feedback (file :: File) (buffer :: PrintStream))
   (feedback "Ignoring unknown file type: " (file:get-name)))
