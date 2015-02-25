@@ -39,17 +39,20 @@
 ;;
 (define (fs-dither-bitmap feedback (src :: Bitmap)) :: Bitmap
   (let* ((src-w (src:get-width))
-         (src-h (src:get-height)))
+         (src-h (src:get-height))
+         (pixels (int[] length: (* src-w src-h)))
+         (idx (lambda (x y) (+ (* y src-w) x))))
     (feedback "Dithering " src-w "x" src-h " image")
+    (src:get-pixels pixels 0 src-w 0 0 src-w src-h)
     (define (store! x y pixel)
-      (src:set-pixel x y (gray->rgb pixel)))
+      (set! (pixels (idx x y)) (gray->rgb pixel)))
     (define (update! x y factor)
       (if (and (< x src-w) (< y src-h) (>= x 0) (>= y 0))
-        (let ((gray (rgb->gray (src:get-pixel x y))))
-          (src:set-pixel x y (gray->rgb (gray+ gray factor))))))
+        (let ((gray (rgb->gray (pixels (idx x y)))))
+          (set! (pixels (idx  x y)) (gray->rgb (gray+ gray factor))))))
     (for-each-coord src-w src-h
                     (lambda (x y)
-                      (let* ((old-pixel (rgb->gray (src:get-pixel x y)))
+                      (let* ((old-pixel (rgb->gray (pixels (idx x y))))
                              (new-pixel (if (> old-pixel 128) 255 0))
                              (quant-error (- old-pixel new-pixel)))
                         (store! x y new-pixel)
@@ -57,6 +60,7 @@
                         (update! (dec x) (inc y) (* quant-error (/ 3 16)))
                         (update! x       (inc y) (* quant-error (/ 5 16)))
                         (update! (inc x) (inc y) (* quant-error (/ 1 16))))))
+    (src:set-pixels pixels 0 src-w 0 0 src-w src-h)
     src))
                         
 

@@ -42,3 +42,12 @@
       ((as java.lang.Throwable x):print-stack-trace  buffer)
       (get-output-string buffer))
     (x:to-string)))
+
+(define (make-time-tracker)
+  (let ((events `((init . ,(java.util.Date)))))
+    (lambda (evt)
+      (case evt
+        ((dump)
+         (reverse events))
+        (else
+         (set! events (cons (cons evt (java.util.Date)) events)))))))
